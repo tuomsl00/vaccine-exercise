@@ -1,0 +1,8 @@
+{
+	"scripts": {
+		"start": "concurrently \"node backend/index.js\" \"cd webfrontend && npm start\""
+	},
+	"dependencies": {
+		"concurrently": "^6.2.0"
+	}
+}
