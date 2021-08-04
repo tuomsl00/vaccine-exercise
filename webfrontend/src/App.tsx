@@ -1,7 +1,23 @@
-import React, { useState } from 'react';
+import React, { ReactElement, useState } from 'react';
 import './App.css';
 
-const server = "http://localhost:5000";
+const server = process.env.REACT_APP_SERVER;
+
+interface ITime {
+  fullDay: boolean;
+  time: string|number;
+  origTime: string;
+}
+
+interface IState {
+  date: string;
+  ordersArrived: number|ReactElement;
+  expiredCount: number|ReactElement;
+  expBeforeUsage: number|ReactElement;
+  vaccinesUsed: number|ReactElement;
+  willExpire: number|ReactElement;
+  expDays: number;
+}
 
 function App() {
   let date = new Date();
@@ -10,28 +26,28 @@ function App() {
   let month = date.getMonth();
   let day = date.getDate();
 
-  const [state, setState] = useState({
+  const [state, setState] = useState<IState>({
     date: year+"-"+month+"-"+day,
-    ordersArrived: 0,
-    expiredCount: 0,
-    expBeforeUsage: 0,
-    vaccinesUsed: 0,
-    expDays: 0,
-    willExpire: 0
+    ordersArrived: <i className="c-inline-spinner"></i>,
+    expiredCount: <i className="c-inline-spinner"></i>,
+    expBeforeUsage: <i className="c-inline-spinner"></i>,
+    vaccinesUsed: <i className="c-inline-spinner"></i>,
+    willExpire: <i className="c-inline-spinner"></i>,
+    expDays: 10,
   });
 
-  const [time, setTime] = useState({
-    fullDay: false,
-    time: "00:00:00",
-    origTime: "00:00:00"
+  const [time, setTime] = useState<ITime>({
+    fullDay: true,
+    time: "23:59:59",
+    origTime: "23:59:59"
   });
 
   async function vaccinessWillExpire(dateMillis: number, days: number) {
     let willExpire = 0;
     try {    
-    await fetch(server+"/vaccines-will-expire/"+dateMillis.toString()+"?days="+days)
-    .then(response => response.json())
-    .then(data => willExpire = data.quantity);
+      await fetch(server+"/vaccines-will-expire/"+dateMillis.toString()+"?days="+days)
+      .then(response => response.json())
+      .then(data => willExpire = data.quantity);
     } catch(e) {
       return 0;
     }
@@ -43,7 +59,7 @@ function App() {
     return ((new Date(date).getTime())-timeZoneOffset);
   }
 
-  async function setDate(e: any) {
+  async function fetchNumbers(e: any) {
     let date = e.target.value;
     
     let dateMillis = dateToMillis(date+" "+time.time);
@@ -53,46 +69,51 @@ function App() {
     let expiredCount = 0;
     let expBeforeUsage = 0;
     let vaccinesUsed = 0;
-    let expDays = 0;
     let willExpire = 0;
-    /*
-    await fetch("http://localhost:3001/orders-count/")
-      .then(response => response.json())
-      .then(data => count = data.orders);
-*/
-    console.log(dateMillis);
+
+    setState({...state, 
+      ordersArrived: <i className="c-inline-spinner"></i>,
+      expiredCount: <i className="c-inline-spinner"></i>,
+      expBeforeUsage: <i className="c-inline-spinner"></i>,
+      vaccinesUsed: <i className="c-inline-spinner"></i>,
+      willExpire: <i className="c-inline-spinner"></i>
+    });
+
     try {
-    await fetch(server+"/orders-arrived-on-date/"+dateMillis)
+        
+      await fetch(server+"/orders-arrived-on-date/"+dateMillis)
       .then(response => response.json())
-      .then(data => ordersArrived = data.ordersArrived);
+      .then(data => ordersArrived = data.quantity);
+      
 
-    await fetch(server+"/expired-bottles/"+dateMillis)
+      await fetch(server+"/expired-bottles/"+dateMillis)
+        .then(response => response.json())
+        .then(data => expiredCount = data.quantity);
+
+      await fetch(server+"/expired-before-usage/"+dateMillis)
+        .then(response => response.json())
+        .then(data => expBeforeUsage = data.quantity);
+
+      await fetch(server+"/vaccines-used/"+dateMillis)
       .then(response => response.json())
-      .then(data => expiredCount = data.expiredCount);
-
-    await fetch(server+"/expired-before-usage/"+dateMillis)
-      .then(response => response.json())
-      .then(data => expBeforeUsage = data.quantity);
-
-    await fetch(server+"/vaccines-used/"+dateMillis)
-    .then(response => response.json())
-    .then(data => vaccinesUsed = data.used);
+      .then(data => vaccinesUsed = data.quantity);
+      
     } catch(e) {
-
+      console.log(e);
     }
-      willExpire = await vaccinessWillExpire(dateMillis, state.expDays);
+    
+    willExpire = await vaccinessWillExpire(dateMillis, state.expDays);
 
-      console.log(ordersArrived);
-
-      setState({
-        date: date,
-        ordersArrived: ordersArrived,
-        expiredCount: expiredCount,
-        expBeforeUsage: expBeforeUsage,
-        vaccinesUsed: vaccinesUsed,
-        expDays: state.expDays,
-        willExpire: willExpire
-      });
+    setState({
+      date: date,
+      ordersArrived: ordersArrived,
+      expiredCount: expiredCount,
+      expBeforeUsage: expBeforeUsage,
+      vaccinesUsed: vaccinesUsed,
+      willExpire: willExpire,
+      expDays: state.expDays
+    });
+      
   }
 
   async function setDays(e: any) {
@@ -103,49 +124,45 @@ function App() {
     updateDays(e, willExpire)
   }
 
-  function updateDays(e: any, willExpire?: number) {
+  function updateDays(e: any, willExpire?: number|ReactElement) {
     if (typeof willExpire === 'undefined') willExpire = state.willExpire;
     setState({
-      date: state.date,
-      ordersArrived: state.ordersArrived,
-      expiredCount: state.expiredCount,
-      expBeforeUsage: state.expBeforeUsage,
-      vaccinesUsed: state.vaccinesUsed,
+      ...state,
       expDays: e.target.value,
       willExpire: willExpire
     });
   }
-  var origTime = "00:00:00";
   function fullDayToggle(e: any) {
     setTime({
       fullDay: e.target.checked,
       time: e.target.checked?"23:59:59":time.origTime,
       origTime: time.origTime
     });
-    console.log(origTime);
+    fetchNumbers({target: { value: state.date}});
   }
 
   function changeTime(e: any) {
-    origTime = e.target.value;
     setTime({
-      fullDay: time.fullDay,
-      time: e.target.value+":00",
-      origTime: e.target.value+":00"
+      fullDay: false,
+      time: e.target.value,
+      origTime: e.target.value
     });
+    fetchNumbers({target: { value: state.date}});
   }
 
   return (
     <div className="App">
       <header className="App-header">
-        <input type="date" onChange={setDate}></input><input type="time" onChange={changeTime}></input>
+        <input type="date" onChange={fetchNumbers} defaultValue={new Date().toISOString().split('T')[0]}></input>
+        <input type="time" onChange={changeTime} defaultValue={new Date().toTimeString().substr(0,8)}></input>
         <p>{state.date} {time.time}</p>
-        <p>Full day <input type="checkbox" onChange={fullDayToggle}></input></p>
+        <p>Full day <input type="checkbox" onChange={fullDayToggle} checked={time.fullDay}></input></p>
         <p>Orders arrived: {state.ordersArrived}</p>
         <p>Vaccines used: {state.vaccinesUsed}</p>
         <p>Bottles expired: {state.expiredCount}</p>
         <p>Expired vaccines before usage: {state.expBeforeUsage}</p>
         <p>Vaccines that'll expire in next {state.expDays} day{state.expDays!=1?"s":""}: {state.willExpire} | <small>{time.fullDay?"Passing day ignored":" Hours from 0th day included"}</small></p>
-        <input type="range" min="0" max="90" onMouseUp={setDays} onChange={updateDays}></input>
+        <input type="range" min="0" max="90" defaultValue={state.expDays} onMouseUp={setDays} onChange={updateDays}></input>
       </header>
     </div>
   );

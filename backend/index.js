@@ -33,41 +33,41 @@ app.get('/', (req, res) => {
 app.get('/orders-count', async (req, res) => {
     let orders = 0;
     try {
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT COUNT(id) FROM Orders');
         orders = result[0][0]["COUNT(id)"];
     } catch(error) {
           return res.status(400).send(error);
     }
     
-    return res.status(200).send({orders: orders});
+    return res.status(200).send({quantity: orders});
 });
 
 app.get('/orders-per-producer/:producer', async (req, res) => {
     let producer = req.params.producer;
     let orders = 0;
     try {
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT COUNT(id) FROM Orders WHERE vaccine=\''+producer+'\'');
         orders = result[0][0]["COUNT(id)"];
     } catch(error) {
           return res.status(400).send(error);
     }
     
-    return res.status(200).send({orders: orders});
+    return res.status(200).send({quantity: orders});
 });
 
 app.get('/vaccines-count', async (req, res) => {
     let vaccinations = 0;
     try {
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT SUM(injections) FROM Orders');
         vaccinations = result[0][0]["SUM(injections)"];
     } catch(error) {
           return res.status(400).send(error);
     }
     
-    return res.status(200).send({vaccinations: vaccinations});
+    return res.status(200).send({quantity: vaccinations});
 });
 
 app.get('/orders-arrived-on-date/:date', async (req, res) => {
@@ -86,16 +86,14 @@ app.get('/orders-arrived-on-date/:date', async (req, res) => {
     let ordersArrived = 0;
     try {
         
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT COUNT(arrived) FROM Orders WHERE DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') >= DATE(\''+date+'\') AND DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(\''+date+'\', \'%Y-%m-%d %H:%i:%s\')');
         ordersArrived = result[0][0]["COUNT(arrived)"];
-        
-    //   console.log('SELECT COUNT(arrived) FROM Orders WHERE DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') >= DATE(\''+date1.toISOString()+'\') AND DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(\''+date1.toISOString()+'\', \'%Y-%m-%d %H:%i:%s\')');
     } catch(error) {
           return res.status(400).send(error);
     }    
 
-    return res.status(200).send({ordersArrived: ordersArrived});
+    return res.status(200).send({quantity: ordersArrived});
 });
 
 app.get('/expired-bottles/:date', async (req, res) => {
@@ -111,15 +109,14 @@ app.get('/expired-bottles/:date', async (req, res) => {
     date =  date.toISOString();
     let expiredCount = 0;
     try {        
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT COUNT(arrived) FROM Orders WHERE DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') >= DATE(\''+date+'\') AND DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(\''+date+'\', \'%Y-%m-%d %H:%i:%s\')');
-//        console.log('SELECT COUNT(arrived) FROM Orders WHERE DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') >= DATE(\''+date+'\') AND DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(\''+date+'\', \'%Y-%m-%d %H:%i:%s\')');
         expiredCount = result[0][0]["COUNT(arrived)"];
     } catch(error) {
           return res.status(400).send(error);
     } 
 
-    return res.status(200).send({expiredCount: expiredCount});
+    return res.status(200).send({quantity: expiredCount});
 });
 
 app.get('/vaccines-will-expire/:date', async (req, res) => {
@@ -146,10 +143,8 @@ app.get('/vaccines-will-expire/:date', async (req, res) => {
     let expiredCount = 0;
     try {
                 
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT SUM(injections) FROM Orders WHERE DATE_FORMAT(\''+date1+'\', \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') AND DATE(\''+date2+'\') > DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\')');
-     
-//    console.log('SELECT SUM(injections) FROM Orders WHERE DATE_FORMAT(\''+date1+'\', \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\') AND DATE(\''+date2+'\') > DATE_FORMAT(arrived, \'%Y-%m-%d %H:%i:%s\')');
         expiredCount = result[0][0]["SUM(injections)"];
         if (!expiredCount) expiredCount = 0;
     } catch(error) {
@@ -171,14 +166,14 @@ app.get('/vaccines-used/:date', async (req, res) => {
 
     let used = 0;
     try {
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT COUNT(vaccinationDate) FROM Vaccinations WHERE DATE(\''+date+'\') < DATE_FORMAT(vaccinationDate, \'%Y-%m-%d %H:%i:%s\') AND DATE_FORMAT(vaccinationDate, \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(\''+date+'\', \'%Y-%m-%d %H:%i:%s\')');
         used = result[0][0]["COUNT(vaccinationDate)"];
     } catch(error) {
           return res.status(400).send(error);
     }
 
-    return res.status(200).send({used: used})
+    return res.status(200).send({quantity: used})
 
 });
 
@@ -194,14 +189,14 @@ app.get('/vaccines-used-by-date/:date', async (req, res) => {
 
     let used = 0;
     try {
-        let db = await connection;
+        let db = connection;
         result = await db.query('SELECT COUNT(vaccinationDate) FROM Vaccinations WHERE DATE_FORMAT(vaccinationDate, \'%Y-%m-%d %H:%i:%s\') < DATE_FORMAT(\''+date+'\', \'%Y-%m-%d %H:%i:%s\')');
         used = result[0][0]["COUNT(vaccinationDate)"];
     } catch(error) {
           return res.status(400).send(error);
     }
 
-    return res.status(200).send({used: used})
+    return res.status(200).send({quantity: used})
 
 });
 
@@ -221,7 +216,7 @@ app.get('/expired-before-usage/:date', async (req, res) => {
     let quantity = 0;
     try {
         
-        let db = await connection;
+        let db = connection;
         result = await db.query(`SELECT (
             SELECT SUM(injections) FROM Orders
             WHERE TIMESTAMPDIFF(SECOND, Orders.arrived, '`+date1+`') >= 3600*24*30

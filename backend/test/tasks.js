@@ -16,7 +16,7 @@ describe('Tasks API' , () => {
     });
 
     let endpoints = [
-        "orders-count",
+        "/orders-count",
         "/orders-per-producer/antiqua",
         "/vaccines-count",
         "/orders-arrived-on-date/1626552000000",
@@ -27,15 +27,19 @@ describe('Tasks API' , () => {
         "/expired-before-usage/1626552000000"
     ];
     
+
     for(endpoint of endpoints) {
         it('Should GET '+endpoint, (done) => {
             chai.request(server)
             .get(endpoint)
-            .end((err, response) => {
-                response.should.have.status(200);
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('quantity').be.a('number');
                 done();
             })
         });
     }
+
     
 });
