@@ -16,3 +16,7 @@ To start frontend with local backend, change REACT_APP_SERVER variable in fronte
 ```
 REACT_APP_SERVER=http://localhost:5000
 ```
+To test backend in ./backend:
+```
+$ npm test
+```

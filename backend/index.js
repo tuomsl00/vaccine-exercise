@@ -7,7 +7,7 @@ const app = express();
 const mysql = require('mysql2/promise');
 
 dotenv.config();
-console.log(process.env.HOST);
+
 const connection = mysql.createPool({
   host     : process.env.HOST,
   user     : process.env.USER,
@@ -66,8 +66,8 @@ app.get('/vaccines-count', async (req, res) => {
     } catch(error) {
           return res.status(400).send(error);
     }
-    
-    return res.status(200).send({quantity: vaccinations});
+    vaccinations = parseInt(vaccinations);
+    return res.status(200).send({quantity: !vaccinations?0:vaccinations});
 });
 
 app.get('/orders-arrived-on-date/:date', async (req, res) => {
@@ -93,7 +93,7 @@ app.get('/orders-arrived-on-date/:date', async (req, res) => {
           return res.status(400).send(error);
     }    
 
-    return res.status(200).send({quantity: ordersArrived});
+    return res.status(200).send({quantity: !ordersArrived?0:ordersArrived});
 });
 
 app.get('/expired-bottles/:date', async (req, res) => {
@@ -116,7 +116,7 @@ app.get('/expired-bottles/:date', async (req, res) => {
           return res.status(400).send(error);
     } 
 
-    return res.status(200).send({quantity: expiredCount});
+    return res.status(200).send({quantity: !expiredCount?0:expiredCount});
 });
 
 app.get('/vaccines-will-expire/:date', async (req, res) => {
@@ -150,7 +150,7 @@ app.get('/vaccines-will-expire/:date', async (req, res) => {
     } catch(error) {
           return res.status(400).send(error);
     }
-
+    expiredCount = parseInt(expiredCount);
     return res.status(200).send({quantity: !expiredCount?0:expiredCount});
 });
 
@@ -196,7 +196,7 @@ app.get('/vaccines-used-by-date/:date', async (req, res) => {
           return res.status(400).send(error);
     }
 
-    return res.status(200).send({quantity: used})
+    return res.status(200).send({quantity: !used?0:used})
 
 });
 
@@ -231,8 +231,8 @@ app.get('/expired-before-usage/:date', async (req, res) => {
           return res.status(400).send(error);
     }
 
-
-    return res.status(200).send({quantity: quantity})
+    quantity = parseInt(quantity);
+    return res.status(200).send({quantity: !quantity?0:quantity})
 
 });
 
