@@ -64,7 +64,6 @@ function App() {
     
     let dateMillis = dateToMillis(date+" "+time.time);
     
-    let count = 0;
     let ordersArrived = 0;
     let expiredCount = 0;
     let expBeforeUsage = 0;

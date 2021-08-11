@@ -72,8 +72,6 @@ app.get('/vaccines-count', async (req, res) => {
 
 app.get('/orders-arrived-on-date/:date', async (req, res) => {
 
-    console.log(req.params.date);
-
     let dateParam = parseInt(req.params.date);
     let date = new Date(dateParam);
 
@@ -105,7 +103,6 @@ app.get('/expired-bottles/:date', async (req, res) => {
         return res.status(400).send({error: "Invalid date."});
     }
 
-    console.log(date);
     date =  date.toISOString();
     let expiredCount = 0;
     try {        
